@@ -361,7 +361,7 @@ class LeadOptimizer:
         combined_text = ' '.join(text_parts).lower()
 
         # Hard filter for B2B/tech companies to prevent misclassification
-        b2b_keywords = ['consulting', 'solutions', 'software']
+        b2b_keywords = ['consulting', 'solutions', 'software', 'technology', 'cloud', 'data', 'analytics', 'genetics', 'diagnostics']
         if any(keyword in combined_text for keyword in b2b_keywords):
             return {
                 'org_type': 'generic_b2b',

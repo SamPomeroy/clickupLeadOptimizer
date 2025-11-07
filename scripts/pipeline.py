@@ -15,9 +15,9 @@ from datetime import datetime
 from typing import Dict, List
 
 # Import our modules
-from lead_optimizer import LeadOptimizer
-from clickup_connector import ClickUpConnector
-from report_generator import ReportGenerator
+from .lead_optimizer import LeadOptimizer
+from .clickup_connector import ClickUpConnector
+from .report_generator import ReportGenerator
 
 # Setup logging
 logging.basicConfig(
@@ -137,6 +137,22 @@ class Pipeline:
 
         logger.info(f"📊 Unique companies: {df['company'].nunique() if 'company' in df.columns else 0}")
         logger.info(f"💾 Saved to: {export_file}")
+
+        # --- Deduplication Step ---
+        if 'company' in df.columns and df['company'].notna().any():
+            logger.info(f"Deduplicating {len(df)} leads by company name...")
+
+            # Define aggregation functions
+            # Keep the first non-null value for most columns
+            # Aggregate task_ids into a comma-separated string
+            agg_funcs = {col: 'first' for col in df.columns if col not in ['company', 'task_id']}
+            agg_funcs['task_id'] = lambda ids: ','.join(ids.astype(str).unique())
+
+            # Group by company and apply aggregation
+            deduplicated_df = df.groupby('company').agg(agg_funcs).reset_index()
+
+            logger.info(f"✅ Deduplication complete. {len(deduplicated_df)} unique companies remain.")
+            return deduplicated_df
         
         return df
     
