@@ -45,8 +45,8 @@ class Pipeline:
             self.config = json.load(f)
         
         # Validate config
-        if self.config['clickup_api_key'] == 'pk_YOUR_CLICKUP_API_KEY':
-            logger.error("Please edit config.json with your actual ClickUp API key!")
+        if self.config['clickup_api_key'] == 'pk_YOUR_CLICKUP_API_KEY' or self.config['list_id'] == 'YOUR_LIST_ID':
+            logger.error("Please edit config.json with your actual ClickUp API key and List ID!")
             sys.exit(1)
         
         # Initialize components
