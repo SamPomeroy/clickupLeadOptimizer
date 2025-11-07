@@ -68,7 +68,7 @@ class Pipeline:
             "enrichment_settings": {
                 "max_workers": 5,
                 "batch_size": 50,
-                "sample_size": null
+                "sample_size": None
             },
             "product_thresholds": {
                 "compass": {
