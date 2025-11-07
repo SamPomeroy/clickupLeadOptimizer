@@ -87,7 +87,10 @@ class TestLeadOptimizer(unittest.TestCase):
         test_cases = [
             {'company': 'Recovery Software Solutions', 'text': 'software solutions', 'keywords': ['software', 'solutions']},
             {'company': 'Myriad Genetics', 'text': 'genetics and diagnostics', 'keywords': ['genetics', 'diagnostics']},
-            {'company': 'Evolve IP', 'text': 'cloud technology and analytics', 'keywords': ['cloud', 'technology', 'analytics']}
+            {'company': 'Evolve IP', 'text': 'cloud technology and analytics', 'keywords': ['cloud', 'technology', 'analytics']},
+            {'company': 'City Mortgage', 'text': 'financial and mortgage services', 'keywords': ['financial', 'mortgage']},
+            {'company': 'State University', 'text': 'a public university', 'keywords': ['university']},
+            {'company': 'General Hospital', 'text': 'a medical center and hospital', 'keywords': ['medical center', 'hospital']}
         ]
 
         for case in test_cases:
