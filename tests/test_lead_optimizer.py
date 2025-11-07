@@ -1,12 +1,6 @@
 import unittest
 from unittest.mock import patch, Mock
-import sys
-import os
-
-# Add the scripts directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../scripts')))
-
-from lead_optimizer import LeadOptimizer
+from scripts.lead_optimizer import LeadOptimizer
 
 class TestLeadOptimizer(unittest.TestCase):
 

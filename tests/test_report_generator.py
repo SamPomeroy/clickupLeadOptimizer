@@ -1,12 +1,6 @@
 import unittest
 import pandas as pd
-import sys
-import os
-
-# Add the scripts directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../scripts')))
-
-from report_generator import ReportGenerator
+from scripts.report_generator import ReportGenerator
 
 class TestReportGenerator(unittest.TestCase):
 
