@@ -77,9 +77,21 @@ class TestLeadOptimizer(unittest.TestCase):
             'ruling_year': '2020'
         }
         result = self.optimizer.score_for_product(lead_data, 'upcurve')
-        self.assertGreater(result['score'], 5.0)
+        self.assertGreaterEqual(result['score'], 6.5)
+        self.assertIn('Verified nonprofit (6.5)', result['reason'])
         self.assertIn('Has donation page', result['reason'])
         self.assertIn('Small nonprofit (<$5M)', result['reason'])
+
+    def test_classify_organization_b2b_override(self):
+        # Test that B2B keywords override other classifications
+        org_data = {
+            'company': 'Recovery Software Solutions',
+            'mission_statement': 'We provide software solutions for recovery centers.'
+        }
+        result = self.optimizer.classify_organization(org_data)
+        self.assertEqual(result['org_type'], 'generic_b2b')
+        self.assertIn('software', result['org_type_keywords'])
+        self.assertIn('solutions', result['org_type_keywords'])
 
     def test_score_for_product_requires_nonprofit(self):
         # Test that Upcurve requires a nonprofit

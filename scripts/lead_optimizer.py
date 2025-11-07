@@ -359,6 +359,16 @@ class LeadOptimizer:
         ]
         
         combined_text = ' '.join(text_parts).lower()
+
+        # Hard filter for B2B/tech companies to prevent misclassification
+        b2b_keywords = ['consulting', 'solutions', 'software']
+        if any(keyword in combined_text for keyword in b2b_keywords):
+            return {
+                'org_type': 'generic_b2b',
+                'org_type_confidence': 1.0,
+                'org_type_keywords': [kw for kw in b2b_keywords if kw in combined_text],
+                'all_type_scores': {'generic_b2b': 1}
+            }
         
         # Score each organization type
         type_scores = {}
@@ -406,6 +416,10 @@ class LeadOptimizer:
         
         # Check if nonprofit (for products that care)
         is_nonprofit = org_data.get('is_nonprofit', False)
+
+        if product == 'upcurve' and is_nonprofit:
+            score = 6.5
+            factors.append("Verified nonprofit (6.5)")
         
         if rules.get('requires_nonprofit') and not is_nonprofit:
             return {
