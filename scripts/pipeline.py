@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class Pipeline:
     """Main pipeline orchestrator"""
     
-    def __init__(self, config_file: str = '../config/config.json'):
+    def __init__(self, config_file: str = 'config.json'):
         """Initialize pipeline with configuration"""
         
         # Load configuration
@@ -52,7 +52,7 @@ class Pipeline:
         # Initialize components
         self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         self.clickup = ClickUpConnector(self.config['clickup_api_key'])
-        self.optimizer = LeadOptimizer('../config/api_keys.json')
+        self.optimizer = LeadOptimizer('api_keys.json')
         self.reporter = ReportGenerator()
         
         logger.info(f"Pipeline initialized - Run ID: {self.timestamp}")
@@ -105,8 +105,8 @@ class Pipeline:
             sys.exit(1)
         
         # Save raw export
-        export_file = f'../data/raw_export_{self.timestamp}.csv'
-        os.makedirs('../data', exist_ok=True)
+        export_file = f'data/raw_export_{self.timestamp}.csv'
+        os.makedirs('data', exist_ok=True)
         df.to_csv(export_file, index=False)
         
         logger.info(f"✅ Exported {len(df)} leads")
@@ -117,7 +117,7 @@ class Pipeline:
         if 'company' in df.columns:
             company_df = df[df['company'].notna()].copy()
             company_df = company_df.groupby('company').first().reset_index()
-            company_file = f'../data/by_company_{self.timestamp}.csv'
+            company_file = f'data/by_company_{self.timestamp}.csv'
             company_df.to_csv(company_file, index=False)
             logger.info(f"📁 Company-grouped version: {company_file} ({len(company_df)} unique)")
             
@@ -159,7 +159,7 @@ class Pipeline:
             # Save checkpoint
             if (batch_num % 2 == 0) or (batch_num == total_batches):
                 checkpoint_df = pd.DataFrame(all_enriched)
-                checkpoint_file = f'../data/enriched_checkpoint_{self.timestamp}.csv'
+                checkpoint_file = f'data/enriched_checkpoint_{self.timestamp}.csv'
                 checkpoint_df.to_csv(checkpoint_file, index=False)
                 logger.info(f"💾 Checkpoint saved: {len(all_enriched)} leads enriched")
         
@@ -167,7 +167,7 @@ class Pipeline:
         enriched_df = pd.DataFrame(all_enriched)
         
         # Save enriched data
-        enriched_file = f'../data/enriched_complete_{self.timestamp}.csv'
+        enriched_file = f'data/enriched_complete_{self.timestamp}.csv'
         enriched_df.to_csv(enriched_file, index=False)
         
         # Print summary stats
@@ -199,7 +199,7 @@ class Pipeline:
         logger.info("STEP 3: GENERATING REPORTS FOR REVIEW")
         logger.info("=" * 60)
         
-        os.makedirs('../exports', exist_ok=True)
+        os.makedirs('exports', exist_ok=True)
         
         reports = {}
         
@@ -220,7 +220,7 @@ class Pipeline:
             compass_cols = [c for c in compass_cols if c in compass_df.columns]
             
             compass_report = compass_df[compass_cols]
-            compass_file = f'../exports/compass_qualified_{self.timestamp}.csv'
+            compass_file = f'exports/compass_qualified_{self.timestamp}.csv'
             compass_report.to_csv(compass_file, index=False)
             reports['compass'] = compass_report
             
@@ -240,7 +240,7 @@ class Pipeline:
             upcurve_cols = [c for c in upcurve_cols if c in upcurve_df.columns]
             
             upcurve_report = upcurve_df[upcurve_cols]
-            upcurve_file = f'../exports/upcurve_qualified_{self.timestamp}.csv'
+            upcurve_file = f'exports/upcurve_qualified_{self.timestamp}.csv'
             upcurve_report.to_csv(upcurve_file, index=False)
             reports['upcurve'] = upcurve_report
             
@@ -258,7 +258,7 @@ class Pipeline:
             
             if not multi_df.empty:
                 multi_df = multi_df.sort_values(['compass_score', 'upcurve_score'], ascending=False)
-                multi_file = f'../exports/multi_product_opportunities_{self.timestamp}.csv'
+                multi_file = f'exports/multi_product_opportunities_{self.timestamp}.csv'
                 multi_df.to_csv(multi_file, index=False)
                 reports['multi'] = multi_df
                 
@@ -268,7 +268,7 @@ class Pipeline:
         
         # EXECUTIVE SUMMARY
         summary = self.reporter.generate_executive_summary(enriched_df, reports, self.config)
-        summary_file = f'../exports/executive_summary_{self.timestamp}.txt'
+        summary_file = f'exports/executive_summary_{self.timestamp}.txt'
         with open(summary_file, 'w') as f:
             f.write(summary)
         
@@ -276,7 +276,7 @@ class Pipeline:
         
         # HTML REPORT
         html_report = self.reporter.generate_html_report(enriched_df, reports, self.timestamp)
-        html_file = f'../exports/report_{self.timestamp}.html'
+        html_file = f'exports/report_{self.timestamp}.html'
         with open(html_file, 'w') as f:
             f.write(html_report)
         
@@ -291,9 +291,9 @@ class Pipeline:
             logger.info("=" * 60)
             logger.info("STEP 4: READY FOR IMPORT")
             logger.info("=" * 60)
-            logger.info("📝 Review the reports in ../exports/")
+            logger.info("📝 Review the reports in exports/")
             logger.info("After Michael's approval, run:")
-            logger.info(f"   python pipeline.py --import-only --file enriched_complete_{self.timestamp}.csv")
+            logger.info(f"   python scripts/pipeline.py --import-only --file enriched_complete_{self.timestamp}.csv")
             return
         
         logger.info("=" * 60)
@@ -371,7 +371,7 @@ class Pipeline:
         if 'multi' in reports:
             print(f"\n🌟 MULTI-PRODUCT OPPORTUNITIES: {len(reports['multi'])}")
         
-        print(f"\n📁 All reports saved to: ../exports/")
+        print(f"\n📁 All reports saved to: exports/")
         print(f"   Review these files before importing to ClickUp!")
         print("="*60)
 
@@ -389,7 +389,7 @@ def main():
     args = parser.parse_args()
     
     # Create necessary directories
-    for dir_name in ['../data', '../exports', '../logs', '../config']:
+    for dir_name in ['data', 'exports', 'logs', 'config']:
         os.makedirs(dir_name, exist_ok=True)
     
     # Initialize pipeline
@@ -399,10 +399,10 @@ def main():
         # Just import existing enriched data
         if not args.file:
             logger.error("--file argument required with --import-only")
-            logger.error("Example: python pipeline.py --import-only --file enriched_complete_20240101_120000.csv")
+            logger.error("Example: python scripts/pipeline.py --import-only --file enriched_complete_20240101_120000.csv")
             return
         
-        file_path = f'../data/{args.file}'
+        file_path = f'data/{args.file}'
         if not os.path.exists(file_path):
             logger.error(f"File not found: {file_path}")
             return
