@@ -10,6 +10,7 @@ import pandas as pd
 import json
 import argparse
 import logging
+import re
 from datetime import datetime
 from typing import Dict, List
 
@@ -110,18 +111,32 @@ class Pipeline:
         df.to_csv(export_file, index=False)
         
         logger.info(f"✅ Exported {len(df)} leads")
+
+        # --- Pre-processing Step ---
+        # Extract company name from description if 'company' is empty
+        if 'description' in df.columns and 'company' in df.columns:
+            # Define the regex pattern to find "🏢 Company: [Company Name]\n"
+            # Using re.DOTALL to make '.' match newlines, though not strictly necessary here
+            # Using a lambda to handle non-matches gracefully
+            def extract_company(desc):
+                if pd.isna(desc):
+                    return None
+                match = re.search(r'🏢 Company: (.*?)\n', desc)
+                if match:
+                    return match.group(1).strip()
+                return None
+
+            # Apply this extraction only to rows where 'company' is null or empty
+            # Create a boolean mask for rows that need filling
+            mask = df['company'].isnull() | (df['company'] == '')
+
+            # Apply the extraction function to the 'description' of the masked rows
+            df.loc[mask, 'company'] = df.loc[mask, 'description'].apply(extract_company)
+
+            logger.info(f"🏢 Extracted {df['company'].notna().sum()} company names from descriptions")
+
         logger.info(f"📊 Unique companies: {df['company'].nunique() if 'company' in df.columns else 0}")
         logger.info(f"💾 Saved to: {export_file}")
-        
-        # Group by company
-        if 'company' in df.columns:
-            company_df = df[df['company'].notna()].copy()
-            company_df = company_df.groupby('company').first().reset_index()
-            company_file = f'data/by_company_{self.timestamp}.csv'
-            company_df.to_csv(company_file, index=False)
-            logger.info(f"📁 Company-grouped version: {company_file} ({len(company_df)} unique)")
-            
-            return company_df
         
         return df
     
