@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class LeadOptimizer:
     """Universal lead enrichment for any Banyan product"""
     
-    def __init__(self, config_path: str = None):
+    def __init__(self, config_path: str = 'api_keys.json'):
         """Initialize with optional API keys"""
         
         self.session = requests.Session()
