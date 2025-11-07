@@ -140,11 +140,16 @@ class Pipeline:
 
         # --- Deduplication Step ---
         if 'company' in df.columns and df['company'].notna().any():
+            # Clean company names
+            df['company'] = df['company'].str.strip()
+
+            # Filter out rows with no company name
+            df.dropna(subset=['company'], inplace=True)
+            df = df[df['company'] != '']
+
             logger.info(f"Deduplicating {len(df)} leads by company name...")
 
             # Define aggregation functions
-            # Keep the first non-null value for most columns
-            # Aggregate task_ids into a comma-separated string
             agg_funcs = {col: 'first' for col in df.columns if col not in ['company', 'task_id']}
             agg_funcs['task_id'] = lambda ids: ','.join(ids.astype(str).unique())
 
