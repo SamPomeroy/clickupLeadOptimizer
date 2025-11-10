@@ -151,18 +151,32 @@ class LeadOptimizer:
                     detail_resp = self.session.get(detail_url, timeout=10)
                     if detail_resp.status_code == 200:
                         details = detail_resp.json()['organization']
+                        ntee_code = details.get('ntee_code')
+                        org_name_lower = details.get('name', '').lower()
+
+                        # Exclude trade associations, business leagues (NTEE code 'J'), and government entities
+                        exclusion_keywords = ['association', 'contractors', 'league', 'chamber of commerce', 'state of', 'county of']
+                        if (ntee_code and ntee_code.startswith('J')) or any(keyword in org_name_lower for keyword in exclusion_keywords):
+                            return {'is_nonprofit': False, 'reason': 'Excluded organization type'}
+
                         return {
                             'is_nonprofit': True,
                             'ein': ein,
                             'nonprofit_name': details.get('name'),
                             'city': details.get('city'),
                             'state': details.get('state'),
-                            'ntee_code': details.get('ntee_code'),
+                            'ntee_code': ntee_code,
                             'ruling_year': details.get('ruling_date', '')[:4],
                             'revenue': details.get('revenue_amount'),
                             'asset_amount': details.get('asset_amount')
                         }
                 
+                # Basic check if detailed info fails but org was found
+                org_name_lower = org.get('name', '').lower()
+                exclusion_keywords = ['association', 'contractors', 'league', 'chamber of commerce', 'state of', 'county of']
+                if any(keyword in org_name_lower for keyword in exclusion_keywords):
+                    return {'is_nonprofit': False, 'reason': 'Excluded organization type'}
+
                 return {
                     'is_nonprofit': True,
                     'ein': ein,
