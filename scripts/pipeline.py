@@ -285,6 +285,23 @@ class Pipeline:
             logger.info(f"   - Verified nonprofits: {upcurve_df['is_nonprofit'].sum() if 'is_nonprofit' in upcurve_df.columns else 0}")
             logger.info(f"   - Saved to: {upcurve_file}")
         
+        # PROCURE PATH REPORT
+        if 'procurepath_score' in enriched_df.columns:
+            procurepath_df = enriched_df[enriched_df['procurepath_score'] >= 6.0].copy()
+            procurepath_df = procurepath_df.sort_values('procurepath_score', ascending=False)
+
+            procurepath_cols = ['company', 'procurepath_score', 'procurepath_reason', 'is_nonprofit', 'email', 'phone', 'task_id']
+            procurepath_cols = [c for c in procurepath_cols if c in procurepath_df.columns]
+
+            procurepath_report = procurepath_df[procurepath_cols]
+            procurepath_file = f'exports/procurepath_qualified_{self.timestamp}.csv'
+            procurepath_report.to_csv(procurepath_file, index=False)
+            reports['procurepath'] = procurepath_report
+
+            logger.info(f"📊 Procure Path Report:")
+            logger.info(f"   - Qualified leads (score >= 6.0): {len(procurepath_report)}")
+            logger.info(f"   - Saved to: {procurepath_file}")
+
         # MULTI-PRODUCT OPPORTUNITIES
         if 'compass_score' in enriched_df.columns and 'upcurve_score' in enriched_df.columns:
             multi_df = enriched_df[

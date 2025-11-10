@@ -76,6 +76,15 @@ class LeadOptimizer:
                 'min_score': 2.0,
                 'max_score': 10.0
             },
+            'procurepath': {
+                'name': 'Procure Path - Grant and Contract Acquisition',
+                'target_keywords': [
+                    'grant', 'rfp', 'contract', 'procure', 'proposal',
+                    'bid', 'government funding', 'opportunities', 'sourcing'
+                ],
+                'min_score': 0.0,
+                'max_score': 10.0
+            },
             # Add more products here as needed!
             # 'jona': { ... },
             # 'harper': { ... },
@@ -425,6 +434,12 @@ class LeadOptimizer:
             score = 6.5
             factors.append("Verified nonprofit (6.5)")
         
+        if product == 'procurepath':
+            score = 0.0 # Start at 0.0 for Procure Path
+            if is_nonprofit:
+                score = 6.5
+                factors.append("Verified nonprofit (6.5)")
+
         if rules.get('requires_nonprofit') and not is_nonprofit:
             return {
                 'score': 2.0,
@@ -444,7 +459,11 @@ class LeadOptimizer:
             if keyword.lower() in text_content:
                 keyword_matches += 1
         
-        if keyword_matches > 0:
+        if product == 'procurepath':
+            if keyword_matches > 0:
+                score += keyword_matches
+                factors.append(f"{keyword_matches} relevant keywords")
+        elif keyword_matches > 0:
             score += min(keyword_matches * 0.5, 3.0)  # Cap at +3
             factors.append(f"{keyword_matches} relevant keywords")
         
@@ -492,9 +511,9 @@ class LeadOptimizer:
         if is_nonprofit and rules.get('boost_if_nonprofit'):
             score *= rules['boost_if_nonprofit']
             factors.append("Nonprofit bonus applied")
-        
+
         # Cap at max score
-        final_score = min(score, rules['max_score'])
+        final_score = min(score, rules.get('max_score', 10.0))
         
         return {
             'score': round(final_score, 1),

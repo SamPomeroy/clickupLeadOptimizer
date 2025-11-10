@@ -1,0 +1,7 @@
+task_id,company,description,email
+1, Company A ,desc A1,a1@test.com
+2,Company B,desc B,b@test.com
+3,Company A,desc A2,a2@test.com
+4,,desc D,d@test.com
+5,,desc E,e@test.com
+6,Company C,desc C,c@test.com

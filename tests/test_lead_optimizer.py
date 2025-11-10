@@ -111,5 +111,17 @@ class TestLeadOptimizer(unittest.TestCase):
         self.assertEqual(result['score'], 2.0)
         self.assertEqual(result['reason'], 'Not a nonprofit (required for this product)')
 
+    def test_score_for_procurepath(self):
+        # Test a lead that is a good fit for Procure Path
+        lead_data = {
+            'company': 'Grant Seekers Foundation',
+            'is_nonprofit': True,
+            'mission_statement': 'We write proposals for government funding and grants.'
+        }
+        result = self.optimizer.score_for_product(lead_data, 'procurepath')
+        self.assertGreaterEqual(result['score'], 8.5) # 6.5 base + 2 keywords
+        self.assertIn('Verified nonprofit (6.5)', result['reason'])
+        self.assertIn('3 relevant keywords', result['reason']) # grant, proposal, government funding
+
 if __name__ == '__main__':
     unittest.main()
