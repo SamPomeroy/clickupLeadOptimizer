@@ -123,5 +123,51 @@ class TestLeadOptimizer(unittest.TestCase):
         self.assertIn('Verified nonprofit (6.5)', result['reason'])
         self.assertIn('3 relevant keywords', result['reason']) # grant, proposal, government funding
 
+    @patch('requests.Session.get')
+    def test_check_nonprofit_status_propublica_excluded_orgs(self, mock_get):
+        # Test that organizations like trade associations are excluded
+        test_cases = [
+            {
+                "name": "Trade Association of America",
+                "ntee_code": "J22", # Business Association
+                "reason": "Excluded due to NTEE code"
+            },
+            {
+                "name": "National Contractors League",
+                "ntee_code": "L40", # General-Purpose Athletic/Recreational Inst.
+                "reason": "Excluded due to name keyword"
+            }
+        ]
+
+        for case in test_cases:
+            with self.subTest(msg=case["reason"]):
+                # Mock the API response from ProPublica
+                mock_search_response = Mock()
+                mock_search_response.status_code = 200
+                mock_search_response.json.return_value = {
+                    'organizations': [{
+                        'ein': '987654321',
+                        'name': case["name"]
+                    }]
+                }
+
+                # Mock the detailed response
+                mock_detail_response = Mock()
+                mock_detail_response.status_code = 200
+                mock_detail_response.json.return_value = {
+                    'organization': {
+                        'name': case["name"],
+                        'city': 'Testville',
+                        'state': 'TS',
+                        'ntee_code': case["ntee_code"],
+                    }
+                }
+
+                mock_get.side_effect = [mock_search_response, mock_detail_response]
+
+                result = self.optimizer.check_propublica(case["name"])
+                self.assertFalse(result['is_nonprofit'])
+                self.assertEqual(result['reason'], 'Excluded organization type')
+
 if __name__ == '__main__':
     unittest.main()
